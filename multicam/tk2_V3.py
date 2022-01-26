@@ -13,6 +13,11 @@ from getmac import getmac
 from tkinter import messagebox
 import webbrowser
 
+# sudo apt-get install mariadb-server
+# sudo apt-get install libmariadb3
+# sudo apt-get install libmariadb-dev
+# pip3 install mariadb
+
 class GUI(Tk):
     def __init__(self, parent):
         Tk.__init__(self, parent)
