@@ -19,6 +19,7 @@ import webbrowser
 # sudo apt-get install libmariadb3
 # sudo apt-get install libmariadb-dev
 # pip3 install mariadb
+# sudo apt install zbar-tools
 
 class GUI(Tk):
     def __init__(self, parent):
