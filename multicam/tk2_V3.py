@@ -3,6 +3,7 @@ import cv2
 from tkinter import *
 from tkinter.ttk import *
 from multiprocessing import Process
+import threading
 from newpack_V3 import *
 import urllib.request
 import time
@@ -320,7 +321,8 @@ def choices_id_list():
         return choices_id
 
 def check_vdo(order,date,time):
-    file_name = "D:/vdo_packing/{}/{}{}.mp4".format(date, order, time)
+    file_name = "/vdo_packing/{}/{}{}.mp4".format(date, order, time)
+#    file_name = "D:/vdo_packing/{}/{}{}.mp4".format(date, order, time)
     cap = cv2.VideoCapture(file_name)
 
     while True:
@@ -339,9 +341,12 @@ def check_vdo(order,date,time):
             break
         elif k == ord('p'):
             cv2.waitKey(0)
-
-    cap.release()
+#   thread.exit()
+#    cap.release()
     cv2.destroyAllWindows()
+    root.destroy()
+    root.quit()
+    sys.exit(0)
 
 def editbox():
     global entry1,entry2,text3,edit
@@ -426,7 +431,8 @@ def post():
     for list in lists:
         _, nameid, customid, order, tel, size, date, a, _ = list
         # file_name = "D:/vdo_packing/{}/{}.mp4".format(date_dir,order)
-        file_name = "D:/vdo_packing/{}/{}{}.mp4".format(date, order, a)
+#        file_name = "D:/vdo_packing/{}/{}{}.mp4".format(date, order, a)
+        file_name = "/vdo_packing/{}/{}{}.mp4".format(date, order, a)
         name, extension = os.path.splitext(file_name)
         mac = getmac.get_mac_address()
         encoded = jwt.encode({'mac address': mac}, 'secret', algorithm='HS256')
@@ -481,11 +487,19 @@ def count_unpost():
     num_report.configure(text = 'UNPOST = {}'.format(count))
     after_id  = root.after(1000, count_unpost)
 
-def quit():
+def quit(root):
     """Cancel all scheduled callbacks and quit."""
     for after_id in root.tk.eval('after info').split():
         root.after_cancel(after_id)
+#    thread.exit()
+ #   cap.release()
+    cv2.destroyAllWindows()
     root.destroy()
+    root.quit()
+    sys.exit(0)
+
+    root.destroy()
+    root.quit()
 
 def confirm(ip,port):
     left = 'http://{}:{}/decoder_control.cgi?loginuse=admin&loginpas=888888&command=4&onestep=1'.format(ip,port)
@@ -502,8 +516,10 @@ def f(ip,port,camID,positionx,positiony):
     qrcode = os.path.join(base_dir, "qrcode")
     # vdo = os.path.join(base_dir, "vdo")
     date_dir = date.today()
-    vdo_dir = 'D:/vdo_packing'
-    vdo = 'D:/vdo_packing/{}'.format(date_dir)
+#    vdo_dir = 'D:/vdo_packing'
+#    vdo = 'D:/vdo_packing/{}'.format(date_dir)
+    vdo_dir = '/vdo_packing'
+    vdo = '/vdo_packing/{}'.format(date_dir)
     logo = os.path.join(base_dir, "image")
     try:
         os.mkdir(vdo_dir)
@@ -522,8 +538,10 @@ def f(ip,port,camID,positionx,positiony):
     nameid = "-"
     order_dummy = 1
     login = False
+#    img_aruco = cv2.imread("phone_aruco_marker.jpg")
     img_aruco = cv2.imread("phone_aruco_marker.jpg")
     cap = cv2.VideoCapture(camID)
+    #cap = cv2.VideoCapture(0)
     while True:
         try:
             # create new and remove old
@@ -560,8 +578,12 @@ def f(ip,port,camID,positionx,positiony):
             messagebox.showerror("Error Process", e)
 
 def run(ip,port,camID,positionx,positiony):
-    t = Process(target=f, args=(ip,port,camID,positionx,positiony,))
+#    t = Process(target=f, args=(ip,port,camID,positionx,positiony,))
+#    t = Process(target=f, args=(ip,port,0,positionx,positiony,))
+    t = threading.Thread(target=f, args=(ip,port,camID,positionx,positiony,))
     t.start()
+#    time.sleep(2)
+#    sys.exit()
 
 def multipost(box_size, a, vdo,record,nameid,customid, order, tel, url):
     print('------multipost------')
@@ -620,8 +642,8 @@ if __name__ == '__main__':
             # check_but2 = testDeviceip(ip2)
             # check_but3 = testDeviceip(ip3)
             check_but7 = testDeviceusb(source=0, positionx=0, positiony=380)
-            check_but8 = testDeviceusb(source=1, positionx=530, positiony=380)
-            check_but9 = testDeviceusb(source=2, positionx=1060, positiony=380)
+#            check_but8 = testDeviceusb(source=1, positionx=530, positiony=380)
+#            check_but9 = testDeviceusb(source=2, positionx=1060, positiony=380)
 
             # if check_but1 == True:
             #     but1 = Button(root, text='opencam1', width=20, command=lambda
@@ -661,16 +683,16 @@ if __name__ == '__main__':
                     camID=0,
                     positionx=0, positiony=300: run(None, None, camID, positionx, positiony))
                 but7.pack(padx=5, pady=5)
-            if check_but8 == True:
-                but8 = Button(root, text='USB-cam2', width=20, bg='#32CD32',fg='white', command=lambda
-                    camID=1,
-                    positionx=530, positiony=300: run(None, None, camID, positionx, positiony))
-                but8.pack(padx=5, pady=5)
-            if check_but9 == True:
-                but9 = Button(root, text='USB-cam3', width=20, bg='#32CD32',fg='white', command=lambda
-                    camID=2,
-                    positionx=1060, positiony=300: run(None, None, camID, positionx, positiony))
-                but9.pack(padx=5, pady=5)
+#            if check_but8 == True:
+#                but8 = Button(root, text='USB-cam2', width=20, bg='#32CD32',fg='white', command=lambda
+#                    camID=1,
+#                    positionx=530, positiony=300: run(None, None, camID, positionx, positiony))
+#                but8.pack(padx=5, pady=5)
+#            if check_but9 == True:
+#                but9 = Button(root, text='USB-cam3', width=20, bg='#32CD32',fg='white', command=lambda
+#                    camID=2,
+#                    positionx=1060, positiony=300: run(None, None, camID, positionx, positiony))
+#                but9.pack(padx=5, pady=5)
 
             repost = Button(root, text="Re-post", width=20, bg='red' ,fg='white', command=repost)
             repost.pack(padx=5, pady=5)
@@ -680,4 +702,5 @@ if __name__ == '__main__':
             num_report.pack(padx=5, pady=5)
             count_unpost()
             root.protocol('WM_DELETE_WINDOW', quit)
+            Button(root, text="Quit", command=lambda root=root:quit(root)).pack()
             root.mainloop()
