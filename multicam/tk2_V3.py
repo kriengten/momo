@@ -1,6 +1,6 @@
 import os
 import cv2  # pip3 install opencv-python
-from tkinter import *
+from tkinter import *  # sudo apt install python3-tk
 from tkinter.ttk import *
 from multiprocessing import Process
 import threading
