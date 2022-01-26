@@ -1,5 +1,5 @@
 import os
-import cv2
+import cv2  # pip3 install opencv-python
 from tkinter import *
 from tkinter.ttk import *
 from multiprocessing import Process
