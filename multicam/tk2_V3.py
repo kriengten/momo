@@ -14,6 +14,7 @@ from getmac import getmac
 from tkinter import messagebox
 import webbrowser
 
+# curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
 # sudo apt-get install mariadb-server
 # sudo apt-get install libmariadb3
 # sudo apt-get install libmariadb-dev
