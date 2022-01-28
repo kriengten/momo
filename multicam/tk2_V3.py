@@ -14,10 +14,16 @@ from getmac import getmac
 from tkinter import messagebox
 import webbrowser
 
-# curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
-# sudo apt-get install mariadb-server
 # sudo apt-get install libmariadb3
 # sudo apt-get install libmariadb-dev
+# pip3 install mariadb
+# if error ,then follow
+# sudo apt-get remove mariadb-server
+# sudo apt-get install software-properties-common
+# sudo apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
+# sudo add-apt-repository 'deb [arch=amd64,arm64,ppc64el] https://mariadb.mirror.liquidtelecom.com/repo/10.6/ubuntu bionic main'
+# sudo apt update
+# sudo apt install mariadb-server mariadb-client
 # pip3 install mariadb
 # sudo apt install zbar-tools
 
