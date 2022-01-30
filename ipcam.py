@@ -6,6 +6,7 @@ import threading
 import cv2
 import sys
 import datetime
+from configparser import ConfigParser
 
 try:
     import mariadb
@@ -97,7 +98,7 @@ def camera(source,path_to_save):
 
 def build_folder_file(path_save):
     global file_folder
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(os.path.abspath('__file__'))
     # date_img = os.path.join(backup_img, "{}".format(datetime.date.today()))
     if path_save != '':
         path = os.path.join(path_save,'record')
@@ -195,24 +196,54 @@ def search_file():
             elif k == 32:
                 cv2.waitKey(0)
 
+#--------------------------------------------------------------------------------------------------
+def create_config(path_to_save,check_source,run_mode,count_device):
+    write_config = ConfigParser()
+    write_config.add_section('log')
+    write_config.set('log', 'Path to save', path_to_save)
+    write_config.set('log', 'Source', check_source)
+    write_config.set('log', 'run mode', run_mode)
+    write_config.set('log', 'Count device', count_device)
+    cfgfile = open('config.ini', 'w')
+    write_config.write(cfgfile)
+    cfgfile.close()
+
+def read_config():
+    read_config = ConfigParser()
+    read_config.read('config.ini')
+
+    path_to_save = read_config.get('log', 'Path to save')
+    check_source = read_config.get('log', 'Source')
+    run_mode = read_config.get('log', 'run mode')
+    count_device = read_config.get('log', 'Count device')
+
+    return path_to_save,check_source,run_mode,count_device
+
 if __name__ == '__main__':
     ip_array = []
     port_array = []
     # print('database\n1:mariadb\n2:sqlite')
     # database_mode = input('select database: ')
     # database(database_mode)
+
     print('\nmode\n1:open camera\n2:search file')
     check_mode = input('select mode: ')
 
     if check_mode == '1':
-        path_to_save = input('\nSelect path to save video: ')
+        check_config = os.path.isfile('config.ini')
+        if check_config == False:
+            path_to_save = input('\nSelect path to save video: ')
 
-        print('\nsource\n1:IP\n2:local')
-        check_source = input('select source: ')
-        print('\nrun mode\n1:Threading\n2:Multiprocessing')
-        run_mode = input('select mode: ')
+            print('\nsource\n1:IP\n2:local')
+            check_source = input('select source: ')
+            print('\nrun mode\n1:Threading\n2:Multiprocessing')
+            run_mode = input('select mode: ')
 
-        count_device = input('\nHow many device: ')
+            count_device = input('\nHow many device: ')
+
+            create_config(path_to_save,check_source,run_mode,count_device)
+        elif check_config == True:
+            path_to_save, check_source, run_mode, count_device = read_config()
         if check_source == '1':
             for i in range(int(count_device)) :
                 ip = input('IP: ')
