@@ -13,7 +13,7 @@ def get_platform():
 
     return platforms[sys.platform]
 
-def read_db_config(filename='../Dropbox/config.ini', section='mysql'):
+def read_db_config(filename='../../Dropbox/config.ini', section='mysql'):
     """ Read database configuration file and return a dictionary object
     :param filename: name of the configuration file
     :param section: section of database configuration
