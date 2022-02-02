@@ -1,3 +1,6 @@
 git reset --hard HEAD
 git clean -f -d
 git pull
+
+
+sudo usermod -a -G video kri
