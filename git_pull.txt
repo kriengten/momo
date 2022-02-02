@@ -4,3 +4,5 @@ git pull
 
 
 sudo usermod -a -G video kri
+
+local camera use test
