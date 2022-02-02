@@ -24,6 +24,9 @@ def camera(source,path_to_save):
     while True:
         _,frame = cap.read()
 
+        if frame is None:
+            continue
+
         frame = cv2.resize(frame, (640, 360))
         Time = datetime.datetime.now().strftime("%T")
         Time_new = Time.replace(':', '-')
@@ -126,6 +129,7 @@ def create_config(config_path,path_to_save,ip,port):
 
     write_config.set('user', 'path to save', path_to_save)
     write_config.set('user', 'mode', '1')
+    write_config.set('user', 'number device for local', '1')
 
     write_config.set('ip port store', 'ip1', ip)
     write_config.set('ip port store', 'port1', port)
@@ -150,6 +154,7 @@ def read_config(config_path):
         if each_section == 'user':
             path_to_save = read_config.get(each_section, 'path to save')
             mode = read_config.get(each_section, 'mode')
+            number_d_local = read_config.get(each_section, 'number device for local')
             no_user = 0
 
         elif each_section == 'ip port store':
@@ -161,7 +166,7 @@ def read_config(config_path):
                     port_array.append(each_val)
 
 
-    return path_to_save, mode,ip_array, port_array, no_user
+    return path_to_save, mode,int(number_d_local) ,ip_array, port_array, no_user
 
 
 if __name__ == '__main__':
@@ -169,10 +174,10 @@ if __name__ == '__main__':
     if check_os == 'Windows':
         config_path = 'C:/Dropbox/config.ini'
     else:
-        config_path = '../Dropbox/config.ini'
+        config_path = file_path
     while True:
         base_dir = pathlib.Path(__file__).parent.absolute()
-        path_to_save, mode,ip_array, port_array, no_user = read_config(config_path)
+        path_to_save, mode,number_d_local,ip_array, port_array, no_user = read_config(config_path)
 
         if no_user == 1:
             print('Add new user')
@@ -189,15 +194,16 @@ if __name__ == '__main__':
         else:
             print('\nEnter to run')
             check_mode = input('>>> ')
-            if check_mode == 'exit':
+            if check_mode == 'exit' or check_mode == 'q':
                 break
 
             elif check_mode == 'test':
-                source = 0
-                if mode == '1':
-                    multiprocess_function(source, path_to_save)
-                elif mode == '0':
-                    threading_function(source, path_to_save)
+                for num_d in range(number_d_local):
+                    source = num_d
+                    if mode == '1':
+                        multiprocess_function(source, path_to_save)
+                    elif mode == '0':
+                        threading_function(source, path_to_save)
 
             elif check_mode == 'run':
                 for j in range(len(ip_array)):
@@ -208,5 +214,9 @@ if __name__ == '__main__':
                         multiprocess_function(source, path_to_save)
                     elif mode == '0':
                         threading_function(source, path_to_save)
+
+            elif check_mode == '':
+                pass
+
             else:
                 print('invalid commard')
