@@ -1,6 +1,8 @@
 import sys
 from configparser import ConfigParser
 
+file_path = '../Dropbox/config.ini'
+
 def get_platform():
     platforms = {
         'linux1': 'Linux',
@@ -13,7 +15,7 @@ def get_platform():
 
     return platforms[sys.platform]
 
-def read_db_config(filename='../../Dropbox/config.ini', section='mysql'):
+def read_db_config(filename=file_path, section='mysql'):
     """ Read database configuration file and return a dictionary object
     :param filename: name of the configuration file
     :param section: section of database configuration
