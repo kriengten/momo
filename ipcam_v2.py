@@ -1,9 +1,12 @@
 import multiprocessing
 import threading
-import os
 import time
 import cv2
 import sys
+import os
+import numpy as np
+import imutils
+
 import datetime
 import pathlib
 from krieng import *
@@ -15,19 +18,53 @@ except:
 import sqlite3
 from sqlite3 import Error
 
-def camera(source,path_to_save):
+count_array = []
+store_frame0_array = [0]
+store_frame1_array = [0]
+store_frame2_array = [0]
+store_frame3_array = [0]
+store_frame4_array = [0]
+store_frame5_array = [0]
+
+def camera(source,path_to_save,skip_frame_ref):
+    global store_frame0_array, store_frame1_array, store_frame2_array, store_frame3_array,store_frame4_array, store_frame5_array
     record = 1
     next = 0
     path_record_array = []
+    skip_frame = 0
     font = cv2.FONT_HERSHEY_SIMPLEX
-    cap = cv2.VideoCapture(source)
+
+    # adjust resolution
+    width = 320
+    high = 180
+
+    firstFrame = None
+    cap = cv2.VideoCapture(source,cv2.CAP_DSHOW)
+
     while True:
         _,frame = cap.read()
 
         if frame is None:
             continue
 
-        frame = cv2.resize(frame, (640, 360))
+        video_size = (width, high)
+        frame = cv2.resize(frame, video_size)
+
+        frame_motion = frame.copy()
+        gray = cv2.cvtColor(frame_motion, cv2.COLOR_RGB2GRAY)
+        gray = cv2.GaussianBlur(gray, (21, 21), 0)
+
+        if firstFrame is None:
+            firstFrame = gray
+            continue
+        frameDelta = cv2.absdiff(firstFrame, gray)
+        firstFrame = gray
+        thresh = cv2.threshold(frameDelta, 25, 255, cv2.THRESH_BINARY)[1]
+        kernel = np.ones((8, 8), np.uint8)
+        thresh = cv2.dilate(thresh, kernel, iterations=8)
+        cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts = imutils.grab_contours(cnts)
+
         Time = datetime.datetime.now().strftime("%T")
         Time_new = Time.replace(':', '-')
 
@@ -44,34 +81,76 @@ def camera(source,path_to_save):
             file_object.close()
 
 
-        cv2.rectangle(frame,(500,30),(610,50),(255,255,255),cv2.FILLED)
-        cv2.putText(frame, '{}'.format(datetime.datetime.now().strftime("%T")), (500, 50), font, 0.8, (0, 0, 0), 1)
+        cv2.rectangle(frame,(width-100,10),(width-20,30),(255,255,255),cv2.FILLED)
+        cv2.putText(frame, '{}'.format(datetime.datetime.now().strftime("%T")), (width-100, 30), font, 0.5, (0, 0, 0), 1)
+
         a = str(source)
         if len(a) > 1:
             b = a.split(':')
             c = b[1].split('.')
             d = b[2].split('/')
             e = 'ip{}-port{}'.format(c[3],d[0])
+
+            # edit ip address position4
+            if c[3] == '121':
+                store_frame0_array.append(frame)
+            elif c[3] == '121':
+                store_frame1_array.append(frame)
+            elif c[3] == '121':
+                store_frame2_array.append(frame)
+            elif c[3] == '121':
+                store_frame3_array.append(frame)
+            elif c[3] == '121':
+                store_frame4_array.append(frame)
+            elif c[3] == '121':
+                store_frame5_array.append(frame)
+
+            fps_video = 10
         else:
             e = a
+            if e == '0':
+                store_frame0_array[0] = frame
+            elif e == '1':
+                store_frame1_array[0] = frame
+            elif e == '2':
+                store_frame2_array[0] = frame
+            elif e == '3':
+                store_frame3_array[0] = frame
+            elif e == '4':
+                store_frame4_array[0] = frame
+            elif e == '5':
+                store_frame5_array[0] = frame
+
+            fps_video =15
+
         file = e + '_' + "{}.mp4".format(Time_new)
-        video_size = (640, 360)
+        # video_size = (640, 360)
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         # fourcc = cv2.VideoWriter_fourcc(*'H264')
         path_save_file = os.path.join(file_folder,file)
 
         if record == 1:
-            rec = cv2.VideoWriter(path_save_file, fourcc, 50, video_size)
+            rec = cv2.VideoWriter(path_save_file, fourcc, fps_video, video_size)
             record = 2
 
         if record == 2:
-            rec.write(frame)
-            if Time_new == '00-00-01':
-                next = 0
-            if Time_new == '00-00-00' and next == 0:
-                record = 1
-                next = 1
+            if cnts != []:
+                rec.write(frame)
+                record = 3
+                if Time_new == '00-00-01':
+                    next = 0
+                if Time_new == '00-00-00' and next == 0:
+                    record = 1
+                    next = 1
+        elif record == 3:
+            skip_frame += 1
+            if skip_frame == int(skip_frame_ref):
+                record = 2
+                skip_frame = 0
         cv2.imshow('frame: {}'.format(source),frame)
+        # positionx = 0 + pox
+        # positiony = 0 + poy
+        # cv2.moveWindow('frame: {}'.format(source), positionx, positiony)
         k = cv2.waitKey(1)
         if k == ord('q'):
             break
@@ -106,19 +185,21 @@ def build_folder_file(path_save):
     try:
         isdir = os.path.isdir(file_folder)
         if isdir == False:
-            os.mkdir(file_folder)
-    except:
-        print('Error to create file_folder')
+            os.makedirs(file_folder, exist_ok=True)
+    except Error as e:
+        print(e)
+        # print('Error to create file_folder')
         sys.exit(1)
     return path
 
-def multiprocess_function(source,path_to_save):
-    multi = multiprocessing.Process(target=camera, args=(source,path_to_save,))
+def multiprocess_function(source,path_to_save,skip_frame):
+    multi = multiprocessing.Process(target=camera, args=(source,path_to_save,skip_frame,))
     multi.start()
     # multi.join()
 
-def threading_function(source,path_to_save):
-    thread = threading.Thread(target=camera, args=(source,path_to_save,))
+def threading_function(source,path_to_save,skip_frame):
+    thread = threading.Thread(target=camera, args=(source,path_to_save,skip_frame,))
+    thread.daemon = True
     thread.start()
 
 def create_config(config_path,path_to_save,ip,port):
@@ -128,8 +209,10 @@ def create_config(config_path,path_to_save,ip,port):
     write_config.add_section('note')
 
     write_config.set('user', 'path to save', path_to_save)
-    write_config.set('user', 'mode', '1')
-    write_config.set('user', 'number device for local', '1')
+    write_config.set('user', 'mode', '0')
+    # write_config.set('user', 'number device for local', '1')
+    write_config.set('user', 'choose source', '0 1 2 3')
+    write_config.set('user', 'skip frame', '1')
 
     write_config.set('ip port store', 'ip1', ip)
     write_config.set('ip port store', 'port1', port)
@@ -146,6 +229,8 @@ def read_config(config_path):
     port_array = []
     path_to_save = ''
     mode = ''
+    choose_source = ''
+    skip_frame = ''
     no_user = 1
     read_config = ConfigParser()
 
@@ -154,7 +239,10 @@ def read_config(config_path):
         if each_section == 'user':
             path_to_save = read_config.get(each_section, 'path to save')
             mode = read_config.get(each_section, 'mode')
-            number_d_local = read_config.get(each_section, 'number device for local')
+            # number_d_local = read_config.get(each_section, 'number device for local')
+            choose_source = read_config.get(each_section, 'choose source')
+            skip_frame = read_config.get(each_section, 'skip frame')
+            # number_d_local = int(number_d_local)
             no_user = 0
 
         elif each_section == 'ip port store':
@@ -166,57 +254,13 @@ def read_config(config_path):
                     port_array.append(each_val)
 
 
-    return path_to_save, mode,int(number_d_local) ,ip_array, port_array, no_user
+    return path_to_save, mode,choose_source,skip_frame ,ip_array, port_array, no_user
 
 
-if __name__ == '__main__':
-    check_os = get_platform()
-    if check_os == 'Windows':
-        config_path = 'C:/Dropbox/config.ini'
-    else:
-        config_path = file_path
-    while True:
-        base_dir = pathlib.Path(__file__).parent.absolute()
-        path_to_save, mode,number_d_local,ip_array, port_array, no_user = read_config(config_path)
+check_os = get_platform()
+if check_os == 'Windows':
+    config_path = file_path_window
+else:
+    config_path = file_path_linux
 
-        if no_user == 1:
-            print('Add new user')
-            print('\nDefault is base file directory')
-            path_to_save = input('\nSelect path to save video: ')
-            if path_to_save == '':
-                path_to_save = str(base_dir)
-
-            ip = input('\nIP: ')
-            port = input('\nPort: ')
-
-            create_config(config_path, path_to_save,ip,port)
-
-        else:
-            print('\nEnter to run')
-            check_mode = input('>>> ')
-            if check_mode == 'exit' or check_mode == 'q':
-                break
-
-            elif check_mode == 'test':
-                for num_d in range(number_d_local):
-                    source = num_d
-                    if mode == '1':
-                        multiprocess_function(source, path_to_save)
-                    elif mode == '0':
-                        threading_function(source, path_to_save)
-
-            elif check_mode == 'run':
-                for j in range(len(ip_array)):
-                    source = 'http://{}:{}/videostream.cgi?user=admin&pwd=888888'.format(ip_array[j], port_array[j])
-                    # source = 'http://{}:{}/video_feed'.format(ip_array[j], port_array[j])
-
-                    if mode == '1':
-                        multiprocess_function(source, path_to_save)
-                    elif mode == '0':
-                        threading_function(source, path_to_save)
-
-            elif check_mode == '':
-                pass
-
-            else:
-                print('invalid commard')
+base_dir = pathlib.Path(__file__).parent.absolute()

@@ -1,7 +1,8 @@
 import sys
 from configparser import ConfigParser
 
-file_path = '../Dropbox/config.ini'
+file_path_linux = '../Dropbox/config.ini'
+file_path_window = 'C:/Dropbox/config.ini'
 
 def get_platform():
     platforms = {
