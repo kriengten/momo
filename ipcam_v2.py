@@ -18,7 +18,6 @@ except:
 import sqlite3
 from sqlite3 import Error
 
-count_array = []
 store_frame0_array = [0]
 store_frame1_array = [0]
 store_frame2_array = [0]

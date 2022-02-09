@@ -118,6 +118,7 @@ if __name__ == '__main__':
 
             elif check_mode == 'test':
                 cs = choose_source.split(' ')
+                count_array = []
                 for num_d in cs:
                     source = int(num_d)
 
@@ -128,6 +129,7 @@ if __name__ == '__main__':
                     count_array.append(source)
 
             elif check_mode == 'run':
+                count_array = []
                 for j in range(len(ip_array)):
                     source = 'http://{}:{}/videostream.cgi?user=admin&pwd=888888'.format(ip_array[j], port_array[j])
                     # rtsp://username:password@camera_ip_address:554/user=username_password='password'_channel=channel_number_stream=0.sdp
